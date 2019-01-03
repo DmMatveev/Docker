@@ -11,8 +11,6 @@ RUN set -ex; \
 		gnupg; \
 	rm -rf /var/lib/apt/lists/*
 
-
-
 ARG PG_VERSION=11.1
 
 ENV PATH $PATH:/usr/local/pgsql/bin

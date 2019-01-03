@@ -6,8 +6,6 @@ RUN set -ex; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
 		ca-certificates \
-		apt-utils \
-		netbase \
 		locales \
 		tzdata; \
 	rm -rf /var/lib/apt/lists/*

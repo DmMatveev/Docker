@@ -4,6 +4,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN set -ex; \
     apt-get update; \
+    apt-get install -y --no-install-recommends apt-utils; \
     apt-get install -y --no-install-recommends \
 		ca-certificates \
 		locales \

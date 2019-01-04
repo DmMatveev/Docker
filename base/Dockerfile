@@ -1,6 +1,7 @@
 FROM debian:stretch-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
+ENV LANG en_US.UTF-8
 
 RUN set -ex; \
     apt-get update; \
@@ -19,4 +20,3 @@ RUN set -ex; \
     ln -fs /usr/share/zoneinfo/Europe/Moscow /etc/localtime; \
     dpkg-reconfigure -f noninteractive tzdata
 
-ENV LANG en_US.UTF-8

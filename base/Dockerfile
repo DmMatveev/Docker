@@ -1,13 +1,13 @@
 FROM debian:stretch-slim
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV LANG en_US.UTF-8
 
 RUN set -ex; \
     apt-get update; \
     apt-get install -y --no-install-recommends apt-utils; \
     apt-get install -y --no-install-recommends \
 		ca-certificates \
+		netbase \
 		locales \
 		tzdata; \
 	rm -rf /var/lib/apt/lists/*
@@ -20,3 +20,4 @@ RUN set -ex; \
     ln -fs /usr/share/zoneinfo/Europe/Moscow /etc/localtime; \
     dpkg-reconfigure -f noninteractive tzdata
 
+ENV LANG en_US.UTF-8

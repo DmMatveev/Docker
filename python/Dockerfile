@@ -36,8 +36,8 @@ RUN set -ex; \
 
 RUN pip3 install --upgrade setuptools pip
 
-RUN find /usr/local -depth -type d -name test -o -name tests -exec rm -rf '{}' \;
-RUN find /usr/local -depth -type d -name '*.pyc' -o -name '*.pyo' -exec rm -rf '{}' \;
+RUN find /usr/local -depth -type d -name test -o -name tests | xargs rm -rf
+RUN find /usr/local -depth -type f -name '*.pyc' -o -name '*.pyo' | xargs rm
 
 FROM dmmatveev/base
 

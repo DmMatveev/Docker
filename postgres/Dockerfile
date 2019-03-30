@@ -1,19 +1,7 @@
-FROM base
-
-RUN set -ex; \
-    apt-get update; \
-    apt-get install -y --no-install-recommends \
-		ca-certificates \
-		apt-utils \
-		netbase \
-		dirmngr \
-		procps \
-		gnupg; \
-	rm -rf /var/lib/apt/lists/*
+FROM dmmatveev/base
 
 ARG PG_VERSION=11.1
 
-ENV PATH $PATH:/usr/local/pgsql/bin
 ENV PGDATA /var/lib/pgsql
 
 RUN set -ex; \

@@ -1,64 +1,65 @@
-FROM dmmatveev/base AS builder
+FROM debian:stretch-slim
 
+# ensure local python is preferred over distribution python
+ENV PATH /usr/local/bin:$PATH
+
+# http://bugs.python.org/issue19846
+# > At the moment, setting "LANG=C" on a Linux system *fundamentally breaks Python 3*, and that's not OK.
+ENV LANG C.UTF-8
+
+# runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+		ca-certificates \
+		netbase \
+	&& rm -rf /var/lib/apt/lists/*
+
+ENV GPG_KEY 0D96DF4D4110E5C43FBFB17F2D347EA6AA65421D
 ENV PYTHON_VERSION 3.7.2
 
-RUN set -ex; \
-	apt-get update; \
-	apt-get install -y --no-install-recommends \
+RUN set -ex \
+	\
+	&& savedAptMark="$(apt-mark showmanual)" \
+	&& apt-get update && apt-get install -y --no-install-recommends \
+		dpkg-dev \
+		gcc \
+		libbz2-dev \
+		libc6-dev \
+		libexpat1-dev \
+		libffi-dev \
+		libgdbm-dev \
+		liblzma-dev \
 		libncursesw5-dev \
 		libreadline-dev \
 		libsqlite3-dev \
-		libgdbm-dev \
-		liblzma-dev \
-		libffi-dev \
 		libssl-dev \
-		libbz2-dev \
-		zlib1g-dev \
-		libc6-dev \
-		uuid-dev \
-		dirmngr \
-		gnupg \
-		atool \
 		make \
+		tk-dev \
+		uuid-dev \
 		wget \
-		gcc
-
-RUN set -ex; \
-    wget -q -O Python.tgz "https://www.python.org/ftp/python/$PYTHON_VERSION/Python-$PYTHON_VERSION.tgz"; \
-    aunpack Python.tgz; \
-    rm Python.tgz; \
-    cd Python-$PYTHON_VERSION; \
-	./configure \
-		--enable-optimizations; \
-	make -j "$(nproc)"; \
-	make install; \
-	rm -r /Python-$PYTHON_VERSION
-
-RUN pip3 install --upgrade setuptools pip
-
-RUN find /usr/local -depth -type d -name test -o -name tests | xargs rm -rf
-RUN find /usr/local -depth -type f -name '*.pyc' -o -name '*.pyo' | xargs rm
-
-FROM dmmatveev/base
-
-COPY --from=builder /usr/local/include /usr/local/include
-COPY --from=builder /usr/local/share /usr/local/share
-COPY --from=builder /usr/local/bin /usr/local/bin
-COPY --from=builder /usr/local/lib /usr/local/lib
-
-RUN set -ex; \
-	apt-get update; \
-	apt-get install -y --no-install-recommends \
-		libffi-dev; \
-	rm -rf /var/lib/apt/lists/*
-
-RUN set -ex; \
-    cd /usr/local/bin; \
-	ln -s idle3 idle; \
-	ln -s pydoc3 pydoc; \
-	ln -s python3 python; \
-	ln -s python3-config python-config; \
-	ln -s pip3 pip
-
-#RUN python3 -m test test_socket test_asyncio
-
+		xz-utils \
+		zlib1g-dev \
+# as of Stretch, "gpg" is no longer included by default
+		$(command -v gpg > /dev/null || echo 'gnupg dirmngr') \
+	\
+	&& wget -O python.tar.xz "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz" \
+	&& wget -O python.tar.xz.asc "https://www.python.org/ftp/python/${PYTHON_VERSION%%[a-z]*}/Python-$PYTHON_VERSION.tar.xz.asc" \
+	&& export GNUPGHOME="$(mktemp -d)" \
+	&& rm -rf "$GNUPGHOME" python.tar.xz.asc \
+	&& mkdir -p /usr/src/python \
+	&& tar -xJC /usr/src/python --strip-components=1 -f python.tar.xz \
+	&& rm python.tar.xz \
+	\
+	&& cd /usr/src/python \
+	&& gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)" \
+	&& ./configure \
+		--build="$gnuArch" \
+		--enable-loadable-sqlite-extensions \
+		--enable-shared \
+		--with-system-expat \
+		--with-system-ffi \
+		--without-ensurepip \
+	&& make -j "$(nproc)" \
+	&& find . -depth -type f -name test_os.py | xargs rm \
+	&& make install \
+	&& ldconfig \
+	&& python3 -m test -j 4
